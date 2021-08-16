@@ -57,7 +57,7 @@ func (r *UserRepository) fetch(ctx context.Context, query string, args ...interf
 
 func (m *UserRepository) Fetch(ctx context.Context) (res []domain.User, err error) {
 	query := `SELECT id,username,email, name, updated_at, created_at
-  						FROM users WHERE created_at > ? ORDER BY created_at LIMIT ? `
+  						FROM users ORDER BY created_at LIMIT 10 `
 
 	// decodedCursor, err := repository.DecodeCursor(cursor)
 	// if err != nil && cursor != "" {
