@@ -7,10 +7,11 @@ import (
 
 // User ...
 type User struct {
-	ID        int64     `json:"id"`
-	Username  string    `json:"username" validate:"required"`
-	Email     string    `json:"email" validate:"required"`
-	Name      string    `json:"name" validate:"required"`
+	ID        int64     `json:"id" gorm:"primary_key;auto_increment"`
+	Username  string    `json:"username" validate:"required" gorm:"size:12;not null;unique"`
+	Email     string    `json:"email" validate:"required" gorm:"size:165;not null;unique"`
+	Password  string    `json:"password" validate:"required" gorm:"size:125;not null;"`
+	Name      string    `json:"name" validate:"required" gorm:"size:125;not null;"`
 	UpdatedAt time.Time `json:"updated_at"`
 	CreatedAt time.Time `json:"created_at"`
 }

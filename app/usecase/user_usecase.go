@@ -1,9 +1,11 @@
-package user
+package usecase
 
 import (
 	"context"
-	"go-api-project/domain"
 	"time"
+
+	"github.com/RedLucky/potongin/domain"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUsecase struct {
@@ -37,7 +39,7 @@ func (uc *UserUsecase) GetByID(c context.Context, id int64) (res domain.User, er
 
 	res, err = uc.UserRepo.GetByID(ctx, id)
 	if err != nil {
-		return
+		return domain.User{}, err
 	}
 
 	return
@@ -65,7 +67,7 @@ func (uc *UserUsecase) GetByUsername(c context.Context, username string) (res do
 func (uc *UserUsecase) GetByEmail(c context.Context, email string) (res domain.User, err error) {
 	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
-	res, err = uc.UserRepo.GetByUsername(ctx, email)
+	res, err = uc.UserRepo.GetByEmail(ctx, email)
 	if err != nil {
 		return
 	}
@@ -76,11 +78,22 @@ func (uc *UserUsecase) GetByEmail(c context.Context, email string) (res domain.U
 func (uc *UserUsecase) Store(c context.Context, m *domain.User) (err error) {
 	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
-	existUser, _ := uc.GetByEmail(ctx, m.Email)
-	if existUser != (domain.User{}) {
-		return domain.ErrConflict
+	existEmail, _ := uc.GetByEmail(ctx, m.Email)
+	if existEmail != (domain.User{}) {
+		return domain.ErrEmailExist
 	}
 
+	existUsername, _ := uc.GetByUsername(ctx, m.Username)
+	if existUsername != (domain.User{}) {
+		return domain.ErrAccountExist
+	}
+
+	hashedPassword, err := hash(m.Password)
+	if err != nil {
+		return err
+	}
+
+	m.Password = string(hashedPassword)
 	m.CreatedAt = time.Now()
 	m.UpdatedAt = time.Now()
 
@@ -99,4 +112,10 @@ func (uc *UserUsecase) Delete(c context.Context, id int64) (err error) {
 		return domain.ErrNotFound
 	}
 	return uc.UserRepo.Delete(ctx, id)
+}
+
+// private function
+
+func hash(password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }

@@ -1,11 +1,13 @@
 package main
 
 import (
-	"go-api-project/app/delivery/api/middleware"
-	_deliveryUser "go-api-project/app/delivery/api/user"
-	_repoUser "go-api-project/app/repository/user"
-	_ucUser "go-api-project/app/usecase/user"
-	"go-api-project/config/db"
+	_delivery "github.com/RedLucky/potongin/app/delivery/api"
+	_customMiddleware "github.com/RedLucky/potongin/app/delivery/api/middleware"
+	_AuthMiddleware "github.com/RedLucky/potongin/app/delivery/api/middleware/auth"
+	"github.com/RedLucky/potongin/app/delivery/api/response"
+	_repo "github.com/RedLucky/potongin/app/repository"
+	_uc "github.com/RedLucky/potongin/app/usecase"
+	"github.com/RedLucky/potongin/config/db"
 
 	"log"
 	"time"
@@ -38,17 +40,35 @@ func main() {
 		}
 	}()
 
-	userRepo := _repoUser.NewUserRepository(mysql)
 	timeoutContext := time.Duration(viper.GetInt("context.timeout")) * time.Second
-	userUc := _ucUser.NewUserUsecase(userRepo, timeoutContext)
+	// user
+	userRepo := _repo.NewUserRepository(mysql)
+	userUc := _uc.NewUserUsecase(userRepo, timeoutContext)
+
+	// auth
+	authRepo := _repo.NewAuthRepository(mysql)
+	authUc := _uc.NewAuthUsecase(authRepo, timeoutContext)
 
 	r := echo.New()
-	middL := middleware.New()
+	middL := _customMiddleware.New()
+	authMiddl := _AuthMiddleware.New()
+	response := response.New()
 	r.Use(echo.WrapMiddleware(middL.CorsMiddleware.Handler))
 	r.Use(middL.MiddlewareLogging)
 
 	r.GET("/stats", middL.Handle)
-	_deliveryUser.NewUserHandler(r, userUc)
+	_delivery.NewAuthHandler(r, authUc, response)
+	apiProtect := r.Group("")
+
+	apiProtect.Use(authMiddl.Authentication)
+	_delivery.NewUserHandler(apiProtect, userUc, response)
+
+	// Configure middleware with the custom claims type
+	// config := middleware.JWTConfig{
+	// 	Claims:     &domain.JwtCustomClaims{},
+	// 	SigningKey: []byte(viper.GetString(`authentication.jwt_signature_key`)),
+	// }
+	// r.Use(middleware.JWTWithConfig(config))
 
 	r.Logger.Fatal(r.Start(viper.GetString("server.address")))
 }

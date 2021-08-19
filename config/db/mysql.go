@@ -1,16 +1,16 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/url"
 
+	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 )
 
 type MysqlConn struct {
-	Conn *sql.DB
+	Conn *gorm.DB
 }
 
 func New() *MysqlConn {
@@ -24,12 +24,8 @@ func New() *MysqlConn {
 	val.Add("parseTime", "1")
 	val.Add("loc", "Asia/Jakarta")
 	dsn := fmt.Sprintf("%s?%s", connection, val.Encode())
-	dbConn, err := sql.Open("mysql", dsn)
+	dbConn, err := gorm.Open("mysql", dsn)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = dbConn.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
