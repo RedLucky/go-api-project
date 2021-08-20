@@ -83,6 +83,25 @@ func (gu *GeneratedUrlUsecase) GetUrlById(ctx context.Context, urlId string) (re
 }
 
 func (gu *GeneratedUrlUsecase) HitUrl(ctx context.Context, generateUrl string) (results string, err error) {
+	ctx, cancel := context.WithTimeout(ctx, gu.contextTimeout)
+	defer cancel()
 
+	existGeneratedUrl, _ := gu.GeneratedRepo.IsExistUrlGenerated(ctx, generateUrl)
+	if existGeneratedUrl {
+		return "", domain.ErrUrlGeneratedExist
+	}
+
+	// check url punya siapa
+	ownerUrl, err := gu.GeneratedRepo.GetUrlByUrl(ctx, generateUrl)
+	if err != nil {
+		return "", domain.ErrUrlGeneratedExist
+	}
+
+	// update total hit nya
+	ownerUrl.TotalHits++
+	err = gu.GeneratedRepo.HitUrl(ctx, ownerUrl.ID, ownerUrl.TotalHits)
+	if err != nil {
+		return "", domain.ErrUrlGeneratedExist
+	}
 	return
 }

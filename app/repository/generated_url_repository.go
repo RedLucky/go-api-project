@@ -49,6 +49,15 @@ func (repo *GeneratedUrlRepository) GetUrlById(ctx context.Context, urlId string
 	return
 }
 
+func (repo *GeneratedUrlRepository) GetUrlByUrl(ctx context.Context, url string) (generateUrl domain.GeneratedUrl, err error) {
+	err = repo.Mysql.Model(&domain.GeneratedUrl{}).Where("generated = ?", url).First(&generateUrl).Error
+	if err != nil {
+		logrus.Error(err)
+		return domain.GeneratedUrl{}, err
+	}
+	return
+}
+
 func (repo *GeneratedUrlRepository) IsExistUrlOrigin(ctx context.Context, urlOrigin string) (result bool, err error) {
 	var generateUrl domain.GeneratedUrl
 	err = repo.Mysql.Model(&domain.GeneratedUrl{}).First(&generateUrl, "source = ?", urlOrigin).Error
@@ -96,7 +105,7 @@ func (repo *GeneratedUrlRepository) CheckDoubleNameByUserId(ctx context.Context,
 	return
 }
 
-func (repo *GeneratedUrlRepository) HitUrl(ctx context.Context, urlId string, total int64) (err error) {
+func (repo *GeneratedUrlRepository) HitUrl(ctx context.Context, urlId, total int64) (err error) {
 	err = repo.Mysql.Model(&domain.GeneratedUrl{}).Where("id = ?", urlId).Updates(
 		domain.GeneratedUrl{TotalHits: total}).Error
 	return
