@@ -28,6 +28,7 @@ func New() *MysqlConn {
 
 	if err != nil {
 		log.Fatal(err)
+		panic("failed to connect database")
 	}
 
 	return &MysqlConn{

@@ -18,16 +18,6 @@ func NewUserRepository(Conn *gorm.DB) domain.UserRepository {
 	return &UserRepository{Conn}
 }
 
-func (r *UserRepository) fetch(ctx context.Context, query string, args ...interface{}) (users []domain.User, err error) {
-	err = r.Mysql.Model(&domain.User{}).Limit(100).Find(&users).Error
-	if err != nil {
-		logrus.Error(err)
-		return nil, err
-	}
-
-	return users, nil
-}
-
 func (m *UserRepository) Fetch(ctx context.Context) (res []domain.User, err error) {
 
 	err = m.Mysql.Model(&domain.User{}).Limit(100).Find(&res).Error

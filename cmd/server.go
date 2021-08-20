@@ -49,6 +49,10 @@ func main() {
 	authRepo := _repo.NewAuthRepository(mysql)
 	authUc := _uc.NewAuthUsecase(authRepo, timeoutContext)
 
+	// generated url
+	generatedUrlRepo := _repo.NewGeneratedUrlRepository(mysql)
+	generatedUrlUc := _uc.NewGeneratedUrlUsecase(generatedUrlRepo, timeoutContext)
+
 	r := echo.New()
 	middL := _customMiddleware.New()
 	authMiddl := _AuthMiddleware.New()
@@ -62,6 +66,7 @@ func main() {
 
 	apiProtect.Use(authMiddl.Authentication)
 	_delivery.NewUserHandler(apiProtect, userUc, response)
+	_delivery.NewGeneratedUrlHandler(apiProtect, generatedUrlUc, response)
 
 	// Configure middleware with the custom claims type
 	// config := middleware.JWTConfig{
