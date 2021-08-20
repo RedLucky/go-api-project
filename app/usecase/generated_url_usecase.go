@@ -57,6 +57,11 @@ func (gu *GeneratedUrlUsecase) CreateUrl(ctx context.Context, url *domain.Genera
 		return domain.ErrUrlGeneratedExist
 	}
 
+	existNameByUserId, _ := gu.GeneratedRepo.CheckDoubleNameByUserId(ctx, url.Name, url.UserId)
+	if existNameByUserId {
+		return domain.ErrNameIsExist
+	}
+
 	err = gu.GeneratedRepo.InsertUrl(ctx, url)
 
 	return

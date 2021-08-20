@@ -23,4 +23,5 @@ var (
 	ErrUrlNotFound       = errors.New("url not found")
 	ErrUrlOriginExist    = errors.New("url origin already exist")
 	ErrUrlGeneratedExist = errors.New("url generated already exist")
+	ErrNameIsExist       = errors.New("Name is exist")
 )

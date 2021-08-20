@@ -79,7 +79,7 @@ func (repo *GeneratedUrlRepository) IsExistUrlGenerated(ctx context.Context, url
 	return
 }
 
-func (repo *GeneratedUrlRepository) CheckDoubleNameByUserId(ctx context.Context, name, userId string) (result bool, err error) {
+func (repo *GeneratedUrlRepository) CheckDoubleNameByUserId(ctx context.Context, name string, userId int64) (result bool, err error) {
 	var generateUrl domain.GeneratedUrl
 	err = repo.Mysql.Model(&domain.GeneratedUrl{}).Where("name = ? and user_id = ?", name, userId).First(&generateUrl).Error
 

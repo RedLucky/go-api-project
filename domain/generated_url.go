@@ -35,6 +35,6 @@ type GeneratedUrlRepository interface {
 	GetUrlById(ctx context.Context, urlId string) (GeneratedUrl, error)
 	IsExistUrlOrigin(ctx context.Context, urlOrigin string) (bool, error)
 	IsExistUrlGenerated(ctx context.Context, urlGenerated string) (bool, error)
-	CheckDoubleNameByUserId(ctx context.Context, name, userId string) (bool, error)
+	CheckDoubleNameByUserId(ctx context.Context, name string, userId int64) (bool, error)
 	HitUrl(ctx context.Context, urlId string, total int64) error
 }
