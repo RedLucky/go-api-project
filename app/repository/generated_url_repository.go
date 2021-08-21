@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/RedLucky/potongin/domain"
 	"github.com/jinzhu/gorm"
@@ -75,7 +76,7 @@ func (repo *GeneratedUrlRepository) IsExistUrlOrigin(ctx context.Context, urlOri
 
 func (repo *GeneratedUrlRepository) IsExistUrlGenerated(ctx context.Context, urlGenerated string) (result bool, err error) {
 	var generateUrl domain.GeneratedUrl
-	err = repo.Mysql.Model(&domain.GeneratedUrl{}).First(&generateUrl, "generated = ?", urlGenerated).Error
+	err = repo.Mysql.Model(&domain.GeneratedUrl{}).Where(" ? between start_date and end_date and is_active = ? ", time.Now(), "Y").First(&generateUrl, "generated = ?", urlGenerated).Error
 	if err != nil {
 		logrus.Error(err)
 		return false, err
