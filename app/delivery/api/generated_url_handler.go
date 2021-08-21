@@ -15,10 +15,6 @@ type GeneratedUrlHandler struct {
 	Response            *response.JsonResponse
 }
 
-type RequestParam struct {
-	urlGenerated string
-}
-
 func NewGeneratedUrlHandler(e *echo.Group, guu domain.GeneratedUrlUsecase, response *response.JsonResponse) {
 	handlers := &GeneratedUrlHandler{
 		GeneratedUrlUsecase: guu,
@@ -56,21 +52,7 @@ func (handler *GeneratedUrlHandler) CreateUrl(c echo.Context) (err error) {
 
 }
 
-func (handler *GeneratedUrlHandler) HitUrl(c echo.Context) (err error) {
-	ctx := c.Request().Context()
-	var param = RequestParam{}
-	if err = c.Bind(param); err != nil {
-		return
-	}
-	results, err := handler.GeneratedUrlUsecase.HitUrl(ctx, param.urlGenerated)
-	if err != nil {
-		return handler.Response.Error(c, err)
-	}
-
-	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{"origin_url": results})
-
-}
-
+// private function
 func validateCreateUrl(m *domain.GeneratedUrl) (bool, error) {
 	validate := validator.New()
 	err := validate.Struct(m)

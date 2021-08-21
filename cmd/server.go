@@ -62,6 +62,7 @@ func main() {
 
 	r.GET("/stats", middL.Handle)
 	_delivery.NewAuthHandler(r, authUc, response)
+	_delivery.NewHitUrlHandler(r, generatedUrlUc, response)
 	apiProtect := r.Group("")
 
 	apiProtect.Use(authMiddl.Authentication)

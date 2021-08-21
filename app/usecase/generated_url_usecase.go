@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/RedLucky/potongin/domain"
-	"github.com/spf13/viper"
 )
 
 type GeneratedUrlUsecase struct {
@@ -51,7 +50,6 @@ func (gu *GeneratedUrlUsecase) CreateUrl(ctx context.Context, url *domain.Genera
 		return domain.ErrUrlOriginExist
 	}
 
-	url.Generated = viper.GetString(`server.url_prefix`) + url.Generated
 	existGeneratedUrl, _ := gu.GeneratedRepo.IsExistUrlGenerated(ctx, url.Generated)
 	if existGeneratedUrl {
 		return domain.ErrUrlGeneratedExist
@@ -87,18 +85,20 @@ func (gu *GeneratedUrlUsecase) HitUrl(ctx context.Context, generateUrl string) (
 	defer cancel()
 
 	existGeneratedUrl, _ := gu.GeneratedRepo.IsExistUrlGenerated(ctx, generateUrl)
-	if existGeneratedUrl {
-		return "", domain.ErrUrlGeneratedExist
+	if !existGeneratedUrl {
+		return "", domain.ErrUrlNotFound
 	}
 
 	// check url punya siapa
 	ownerUrl, err := gu.GeneratedRepo.GetUrlByUrl(ctx, generateUrl)
 	if err != nil {
-		return "", domain.ErrUrlGeneratedExist
+		return "", domain.ErrUrlNotFound
 	}
 
 	// update total hit nya
 	ownerUrl.TotalHits++
+	results = ownerUrl.Source
+
 	err = gu.GeneratedRepo.HitUrl(ctx, ownerUrl.ID, ownerUrl.TotalHits)
 	if err != nil {
 		return "", domain.ErrUrlGeneratedExist
