@@ -7,6 +7,7 @@ import (
 	"github.com/RedLucky/potongin/app/delivery/api/response"
 	_repo "github.com/RedLucky/potongin/app/repository"
 	_uc "github.com/RedLucky/potongin/app/usecase"
+	"github.com/RedLucky/potongin/config/cache"
 	"github.com/RedLucky/potongin/config/db"
 
 	"log"
@@ -15,6 +16,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+)
+
+var (
+	redisHost string
 )
 
 func init() {
@@ -27,11 +32,13 @@ func init() {
 	if viper.GetBool(`debug`) {
 		log.Println("Service RUN on DEBUG mode")
 	}
+	redisHost = viper.GetString(`redis.host`) + ":" + viper.GetString(`redis.port`)
 }
 
 func main() {
 
 	mysql := db.New().Conn
+	redis := cache.New(redisHost)
 
 	defer func() {
 		err := mysql.Close()
@@ -51,7 +58,7 @@ func main() {
 
 	// generated url
 	generatedUrlRepo := _repo.NewGeneratedUrlRepository(mysql)
-	generatedUrlUc := _uc.NewGeneratedUrlUsecase(generatedUrlRepo, timeoutContext)
+	generatedUrlUc := _uc.NewGeneratedUrlUsecase(generatedUrlRepo, timeoutContext, redis.Pool)
 
 	r := echo.New()
 	middL := _customMiddleware.New()
