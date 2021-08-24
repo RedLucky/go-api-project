@@ -23,7 +23,7 @@ type GeneratedUrl struct {
 type GeneratedUrlUsecase interface {
 	CreateUrl(ctx context.Context, url *GeneratedUrl) error
 	UpdateUrl(ctx context.Context, url *GeneratedUrl) error
-	GetUrlByUserId(ctx context.Context, userId string) ([]GeneratedUrl, error)
+	GetUrlByUserId(ctx context.Context, userId int64) ([]GeneratedUrl, error)
 	GetUrlById(ctx context.Context, urlId string) (GeneratedUrl, error)
 	HitUrl(ctx context.Context, generateUrl string) (originUrl string, err error)
 }
@@ -31,7 +31,7 @@ type GeneratedUrlUsecase interface {
 type GeneratedUrlRepository interface {
 	InsertUrl(ctx context.Context, url *GeneratedUrl) error
 	UpdateUrl(ctx context.Context, url *GeneratedUrl) error
-	GetUrlByUserId(ctx context.Context, userId string) ([]GeneratedUrl, error)
+	GetUrlByUserId(ctx context.Context, userId int64) ([]GeneratedUrl, error)
 	GetUrlById(ctx context.Context, urlId string) (GeneratedUrl, error)
 	GetUrlByUrl(ctx context.Context, url string) (GeneratedUrl, error)
 	IsExistUrlOrigin(ctx context.Context, urlOrigin string) (bool, error)

@@ -90,10 +90,6 @@ func (gu *GeneratedUrlUsecase) UpdateUrl(ctx context.Context, url *domain.Genera
 
 	url.Source = strings.TrimPrefix(url.Source, "https://")
 	url.Source = strings.TrimPrefix(url.Source, "http://")
-	url.CreatedAt = time.Now()
-	url.UpdatedAt = time.Now()
-	url.StartDate = time.Now()
-	url.IsActive = "Y"
 
 	existOriginUrl, _ := gu.GeneratedRepo.IsExistUrlOrigin(ctx, url.Source)
 	if existOriginUrl {
@@ -121,13 +117,25 @@ func (gu *GeneratedUrlUsecase) UpdateUrl(ctx context.Context, url *domain.Genera
 	return
 }
 
-func (gu *GeneratedUrlUsecase) GetUrlByUserId(ctx context.Context, userId string) (results []domain.GeneratedUrl, err error) {
+func (gu *GeneratedUrlUsecase) GetUrlByUserId(ctx context.Context, userId int64) (results []domain.GeneratedUrl, err error) {
+	ctx, cancel := context.WithTimeout(ctx, gu.contextTimeout)
+	defer cancel()
 
+	results, err = gu.GeneratedRepo.GetUrlByUserId(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 
 func (gu *GeneratedUrlUsecase) GetUrlById(ctx context.Context, urlId string) (results domain.GeneratedUrl, err error) {
+	ctx, cancel := context.WithTimeout(ctx, gu.contextTimeout)
+	defer cancel()
 
+	results, err = gu.GeneratedRepo.GetUrlById(ctx, urlId)
+	if err != nil {
+		return domain.GeneratedUrl{}, err
+	}
 	return
 }
 

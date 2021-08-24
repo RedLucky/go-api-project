@@ -32,7 +32,7 @@ func (repo *GeneratedUrlRepository) UpdateUrl(ctx context.Context, url *domain.G
 	return
 }
 
-func (repo *GeneratedUrlRepository) GetUrlByUserId(ctx context.Context, userId string) (generateUrls []domain.GeneratedUrl, err error) {
+func (repo *GeneratedUrlRepository) GetUrlByUserId(ctx context.Context, userId int64) (generateUrls []domain.GeneratedUrl, err error) {
 	err = repo.Mysql.Model(&domain.GeneratedUrl{}).Where("user_id = ?", userId).Find(&generateUrls).Error
 	if err != nil {
 		logrus.Error(err)

@@ -22,6 +22,7 @@ func NewGeneratedUrlHandler(e *echo.Group, guu domain.GeneratedUrlUsecase, respo
 	}
 
 	e.POST("/createUrl", handlers.CreateUrl)
+	e.GET("/urls", handlers.GetUserByUserId)
 
 }
 
@@ -44,6 +45,23 @@ func (handler *GeneratedUrlHandler) CreateUrl(c echo.Context) (err error) {
 	generateUrl.UserId = id
 	ctx := c.Request().Context()
 	err = handler.GeneratedUrlUsecase.CreateUrl(ctx, &generateUrl)
+	if err != nil {
+		return handler.Response.Error(c, err)
+	}
+
+	return handler.Response.Success(c, "success", http.StatusCreated, map[string]interface{}{"generated_url": generateUrl})
+
+}
+
+func (handler *GeneratedUrlHandler) GetUserByUserId(c echo.Context) (err error) {
+	var generateUrl []domain.GeneratedUrl
+
+	data := c.Get("user").(jwt.MapClaims)
+	idP := data["id"].(float64)
+	id := int64(idP)
+
+	ctx := c.Request().Context()
+	generateUrl, err = handler.GeneratedUrlUsecase.GetUrlByUserId(ctx, id)
 	if err != nil {
 		return handler.Response.Error(c, err)
 	}

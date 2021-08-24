@@ -76,12 +76,5 @@ func main() {
 	_delivery.NewUserHandler(apiProtect, userUc, response)
 	_delivery.NewGeneratedUrlHandler(apiProtect, generatedUrlUc, response)
 
-	// Configure middleware with the custom claims type
-	// config := middleware.JWTConfig{
-	// 	Claims:     &domain.JwtCustomClaims{},
-	// 	SigningKey: []byte(viper.GetString(`authentication.jwt_signature_key`)),
-	// }
-	// r.Use(middleware.JWTWithConfig(config))
-
 	r.Logger.Fatal(r.Start(viper.GetString("server.address")))
 }
