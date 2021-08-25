@@ -22,7 +22,9 @@ type JwtResults struct {
 }
 
 type JwtCustomClaims struct {
-	ID int64 `json:"id"`
+	ID          int64  `json:"id"`
+	AccessUUID  string `json:"access_uuid"`
+	RefreshUUID string `json:"refresh_uuid"`
 	jwt.StandardClaims
 }
 

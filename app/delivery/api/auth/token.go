@@ -21,7 +21,8 @@ func CreateToken(user *domain.User) (jwtResults domain.JwtResults, err error) {
 			Issuer:    viper.GetString(`server.application_name`),
 			ExpiresAt: jwtResults.AccessExp,
 		},
-		ID: user.ID,
+		ID:         user.ID,
+		AccessUUID: jwtResults.AccessUUID,
 	}
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Accessclaims)
@@ -32,13 +33,14 @@ func CreateToken(user *domain.User) (jwtResults domain.JwtResults, err error) {
 
 	// refresh_token
 	jwtResults.RefreshUUID = uuid.New().String()
-	jwtResults.RefreshExp = time.Now().Add(time.Duration(viper.GetInt32(`authentication.duration`)) * time.Hour * 24 * 7).Unix()
+	jwtResults.RefreshExp = time.Now().Add(time.Duration(viper.GetInt32(`authentication.duration`)) * time.Hour * 24).Unix()
 	Refreshclaims := domain.JwtCustomClaims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    viper.GetString(`server.application_name`),
 			ExpiresAt: jwtResults.RefreshExp,
 		},
-		ID: user.ID,
+		ID:          user.ID,
+		RefreshUUID: jwtResults.RefreshUUID,
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Refreshclaims)
