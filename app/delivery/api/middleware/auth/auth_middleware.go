@@ -18,6 +18,7 @@ func (m *AuthMiddleware) Authentication(next echo.HandlerFunc) echo.HandlerFunc 
 		claims, err := auth.TokenValid(c.Request())
 		if err != nil {
 			makeLogEntry(c).Error(domain.ErrorAuthorization)
+			// this should be to check refresh token if exist (using redis)
 			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Unathorized"})
 		}
 		c.Set("user", claims)

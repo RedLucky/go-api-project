@@ -8,20 +8,46 @@ import (
 
 	"github.com/RedLucky/potongin/domain"
 	jwt "github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
-func CreateToken(user *domain.User) (string, error) {
-	claims := domain.JwtCustomClaims{
+func CreateToken(user *domain.User) (jwtResults domain.JwtResults, err error) {
+	// access_token
+	jwtResults.AccessUUID = uuid.New().String()
+	jwtResults.AccessExp = time.Now().Add(time.Duration(viper.GetInt32(`authentication.duration`)) * time.Hour).Unix()
+	Accessclaims := domain.JwtCustomClaims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    viper.GetString(`server.application_name`),
-			ExpiresAt: time.Now().Add(time.Duration(viper.GetInt32(`authentication.duration`)) * time.Hour).Unix(),
+			ExpiresAt: jwtResults.AccessExp,
 		},
 		ID: user.ID,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(viper.GetString(`authentication.jwt_signature_key`)))
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Accessclaims)
+	jwtResults.AccessToken, err = accessToken.SignedString([]byte(viper.GetString(`authentication.jwt_signature_access_key`)))
+	if err != nil {
+		return domain.JwtResults{}, err
+	}
+
+	// refresh_token
+	jwtResults.RefreshUUID = uuid.New().String()
+	jwtResults.RefreshExp = time.Now().Add(time.Duration(viper.GetInt32(`authentication.duration`)) * time.Hour * 24 * 7).Unix()
+	Refreshclaims := domain.JwtCustomClaims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    viper.GetString(`server.application_name`),
+			ExpiresAt: jwtResults.RefreshExp,
+		},
+		ID: user.ID,
+	}
+
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Refreshclaims)
+	jwtResults.RefreshToken, err = refreshToken.SignedString([]byte(viper.GetString(`authentication.jwt_signature_refresh_key`)))
+	if err != nil {
+		return domain.JwtResults{}, err
+	}
+
+	return
 
 }
 
@@ -29,9 +55,9 @@ func TokenValid(r *http.Request) (jwt.MapClaims, error) {
 	tokenString := ExtractToken(r)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(viper.GetString(`authentication.jwt_signature_key`)), nil
+		return []byte(viper.GetString(`authentication.jwt_signature_access_key`)), nil
 	})
 	if err != nil {
 		return nil, err

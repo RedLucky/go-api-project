@@ -8,6 +8,7 @@ import (
 
 	"github.com/RedLucky/potongin/domain"
 	"github.com/gomodule/redigo/redis"
+	"github.com/spf13/viper"
 )
 
 type GeneratedUrlUsecase struct {
@@ -160,7 +161,8 @@ func (gu *GeneratedUrlUsecase) HitUrl(ctx context.Context, generateUrl string) (
 		if err != nil {
 			return "", domain.ErrInternalServerError
 		}
-		_, err = conn.Do("EXPIRE", generateUrl, 30*time.Minute)
+		// 60 is seconds
+		_, err = conn.Do("EXPIRE", generateUrl, viper.GetInt(`redis.exp_hit_url`)*60)
 		if err != nil {
 			return "", domain.ErrInternalServerError
 		}

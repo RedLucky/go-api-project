@@ -48,19 +48,19 @@ func (uc *AuthUsecase) SignUp(c context.Context, user *domain.User) (err error) 
 	return
 }
 
-func (uc *AuthUsecase) Authenticate(c context.Context, email, password string) (token string, err error) {
+func (uc *AuthUsecase) Authenticate(c context.Context, email, password string) (token domain.JwtResults, err error) {
 	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
 	user := domain.User{}
 
 	user, err = uc.AuthRepo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return "", err
+		return domain.JwtResults{}, err
 	}
 
 	err = verifyPassword(user.Password, password)
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		return "", domain.ErrPassword
+		return domain.JwtResults{}, domain.ErrPassword
 	}
 
 	return auth.CreateToken(&user)

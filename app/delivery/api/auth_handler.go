@@ -57,10 +57,15 @@ func (handler *AuthHandler) Login(c echo.Context) (err error) {
 	}
 
 	ctx := c.Request().Context()
-	token, err := handler.AuthUsecase.Authenticate(ctx, auth.Email, auth.Password)
+	jwtResults, err := handler.AuthUsecase.Authenticate(ctx, auth.Email, auth.Password)
 	if err != nil {
 		return handler.Response.Error(c, err)
 	}
+	token := map[string]string{
+		"access_token":  jwtResults.AccessToken,
+		"refresh_token": jwtResults.RefreshToken,
+	}
+
 	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{"token": token})
 
 }

@@ -12,6 +12,15 @@ type Auth struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type JwtResults struct {
+	AccessUUID   string `json:"access_uuid"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	RefreshUUID  string `json:"refresh_uuid"`
+	AccessExp    int64  `json:"access_exp"`
+	RefreshExp   int64  `json:"refresh_exp"`
+}
+
 type JwtCustomClaims struct {
 	ID int64 `json:"id"`
 	jwt.StandardClaims
@@ -19,7 +28,7 @@ type JwtCustomClaims struct {
 
 // AuthUsecase represent the authentication usecases
 type AuthUsecase interface {
-	Authenticate(ctx context.Context, email, password string) (string, error)
+	Authenticate(ctx context.Context, email, password string) (JwtResults, error)
 	SignUp(ctx context.Context, user *User) error
 	// CreateVerifyEmail(ctx context.Context, email string) error
 	// VerifyEmail(ctx context.Context, token string) error
