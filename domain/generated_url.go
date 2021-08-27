@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"time"
+
+	"github.com/gomodule/redigo/redis"
 )
 
 // define models
@@ -38,4 +40,8 @@ type GeneratedUrlRepository interface {
 	IsExistUrlGenerated(ctx context.Context, urlGenerated string) (bool, error)
 	CheckDoubleNameByUserId(ctx context.Context, name string, userId int64) (bool, error)
 	HitUrl(ctx context.Context, urlId, total int64) error
+	// using redis
+	GetUrlFromCache(redisCon redis.Conn, generatedUrl string) (string, error)
+	SetUrlToCache(redisCon redis.Conn, generatedUrl, sourceUrl string) error
+	SetUrlExpCache(redisCon redis.Conn, generatedUrl string, duration int) error
 }

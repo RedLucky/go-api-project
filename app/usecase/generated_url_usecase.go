@@ -148,7 +148,7 @@ func (gu *GeneratedUrlUsecase) HitUrl(ctx context.Context, generateUrl string) (
 	conn := gu.RedisPool.Get()
 	defer conn.Close()
 
-	res, err := redis.String(conn.Do("HGET", generateUrl, "source_url"))
+	res, err := gu.GeneratedRepo.GetUrlFromCache(conn, generateUrl)
 	if err == redis.ErrNil {
 		existGeneratedUrl, _ := gu.GeneratedRepo.IsExistUrlGenerated(ctx, generateUrl)
 		if !existGeneratedUrl {
@@ -157,12 +157,12 @@ func (gu *GeneratedUrlUsecase) HitUrl(ctx context.Context, generateUrl string) (
 
 		results, err = gu.updateTotalHits(ctx, generateUrl)
 
-		_, err = conn.Do("HSET", generateUrl, "source_url", results)
+		err = gu.GeneratedRepo.SetUrlToCache(conn, generateUrl, results)
 		if err != nil {
 			return "", domain.ErrInternalServerError
 		}
 		// 60 is seconds
-		_, err = conn.Do("EXPIRE", generateUrl, viper.GetInt(`redis.exp_hit_url`)*60)
+		err = gu.GeneratedRepo.SetUrlExpCache(conn, generateUrl, viper.GetInt(`redis.exp_hit_url`))
 		if err != nil {
 			return "", domain.ErrInternalServerError
 		}

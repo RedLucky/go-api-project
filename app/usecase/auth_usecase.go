@@ -2,23 +2,28 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/RedLucky/potongin/app/delivery/api/auth"
 	"github.com/RedLucky/potongin/domain"
+	"github.com/gomodule/redigo/redis"
+	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthUsecase struct {
 	AuthRepo       domain.AuthRepository
 	contextTimeout time.Duration
+	RedisPool      *redis.Pool
 }
 
 // NewUserUsecase will create new an USerUsecase object representation of domain.UserUsecase interface
-func NewAuthUsecase(repo domain.AuthRepository, timeout time.Duration) domain.AuthUsecase {
+func NewAuthUsecase(repo domain.AuthRepository, timeout time.Duration, redisPool *redis.Pool) domain.AuthUsecase {
 	return &AuthUsecase{
 		AuthRepo:       repo,
 		contextTimeout: timeout,
+		RedisPool:      redisPool,
 	}
 }
 
@@ -62,8 +67,51 @@ func (uc *AuthUsecase) Authenticate(c context.Context, email, password string) (
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
 		return domain.JwtResults{}, domain.ErrPassword
 	}
+	token, err = auth.CreateToken(&user)
+	if err != nil {
+		return domain.JwtResults{}, domain.ErrInternalServerError
+	}
+	// set on redis cache pool
+	conn := uc.RedisPool.Get()
+	defer conn.Close()
+	if err = auth.SaveToken(conn, user, token); err != nil {
+		fmt.Println(err)
+		return domain.JwtResults{}, domain.ErrInternalServerError
+	}
+	return
+}
 
-	return auth.CreateToken(&user)
+func (uc *AuthUsecase) GenerateNewAccessToken(c echo.Context) (token domain.JwtResults, err error) {
+	_, cancel := context.WithTimeout(c.Request().Context(), uc.contextTimeout)
+	defer cancel()
+	var user domain.User
+
+	// validate token
+	claims, err := auth.RefreshTokenValid(c.Request())
+	if err != nil {
+		return domain.JwtResults{}, err
+	}
+
+	// get uuid token from jwt
+	res, ok := claims["refresh_uuid"].(string)
+	if !ok {
+		return domain.JwtResults{}, err
+	}
+	// get user_id to redis
+	conn := uc.RedisPool.Get()
+	defer conn.Close()
+	userId, err := auth.GetTokenFromRedis(conn, res)
+	if err != nil {
+		return domain.JwtResults{}, err
+	}
+	user.ID = userId
+	// generate new refresh token
+	token, err = auth.CreateToken(&user)
+	// set on redis cache pool
+	if err = auth.SaveToken(conn, user, token); err != nil {
+		return domain.JwtResults{}, err
+	}
+	return
 }
 
 // private function

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/RedLucky/potongin/domain"
+	"github.com/gomodule/redigo/redis"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 )
@@ -110,4 +111,20 @@ func (repo *GeneratedUrlRepository) HitUrl(ctx context.Context, urlId, total int
 	err = repo.Mysql.Model(&domain.GeneratedUrl{}).Where("id = ?", urlId).Updates(
 		domain.GeneratedUrl{TotalHits: total}).Error
 	return
+}
+
+// using redis
+func (repo *GeneratedUrlRepository) GetUrlFromCache(redisCon redis.Conn, generatedUrl string) (res string, err error) {
+	res, err = redis.String(redisCon.Do("HGET", generatedUrl, "source_url"))
+	return
+}
+
+func (repo *GeneratedUrlRepository) SetUrlToCache(redisCon redis.Conn, generatedUrl, sourceUrl string) error {
+	_, err := redisCon.Do("HSET", generatedUrl, "source_url", sourceUrl)
+	return err
+}
+
+func (repo *GeneratedUrlRepository) SetUrlExpCache(redisCon redis.Conn, generatedUrl string, duration int) error {
+	_, err := redisCon.Do("EXPIRE", generatedUrl, duration*60) //duration in seconds
+	return err
 }

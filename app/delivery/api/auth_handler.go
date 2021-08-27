@@ -20,6 +20,7 @@ func NewAuthHandler(e *echo.Echo, uc domain.AuthUsecase, response *response.Json
 		Response:    response,
 	}
 	e.POST("/login", handler.Login)
+	e.POST("/refreshToken", handler.refreshToken)
 	e.POST("/signup", handler.Signup)
 }
 
@@ -68,6 +69,19 @@ func (handler *AuthHandler) Login(c echo.Context) (err error) {
 
 	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{"token": token})
 
+}
+
+func (handler *AuthHandler) refreshToken(c echo.Context) (err error) {
+	jwtResults, err := handler.AuthUsecase.GenerateNewAccessToken(c)
+	if err != nil {
+		return handler.Response.Error(c, err)
+	}
+	token := map[string]string{
+		"access_token":  jwtResults.AccessToken,
+		"refresh_token": jwtResults.RefreshToken,
+	}
+
+	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{"token": token})
 }
 
 func validateLogin(m *domain.Auth) (bool, error) {

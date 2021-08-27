@@ -6,7 +6,6 @@ import (
 
 	"github.com/RedLucky/potongin/app/delivery/api/response"
 	"github.com/RedLucky/potongin/domain"
-	"github.com/golang-jwt/jwt"
 
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
@@ -34,13 +33,10 @@ func NewUserHandler(e *echo.Group, uc domain.UserUsecase, response *response.Jso
 }
 
 func (handler *UserHandler) Me(c echo.Context) error {
-	data := c.Get("user").(jwt.MapClaims)
-	idP := data["id"].(float64)
-
-	id := int64(idP)
+	userId := c.Get("user_id").(int64)
 	ctx := c.Request().Context()
 
-	user, err := handler.UserUsecase.GetByID(ctx, id)
+	user, err := handler.UserUsecase.GetByID(ctx, userId)
 	if err != nil {
 		return handler.Response.Error(c, err)
 	}

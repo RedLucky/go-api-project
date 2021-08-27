@@ -54,7 +54,7 @@ func main() {
 
 	// auth
 	authRepo := _repo.NewAuthRepository(mysql)
-	authUc := _uc.NewAuthUsecase(authRepo, timeoutContext)
+	authUc := _uc.NewAuthUsecase(authRepo, timeoutContext, redis.Pool)
 
 	// generated url
 	generatedUrlRepo := _repo.NewGeneratedUrlRepository(mysql)
@@ -62,7 +62,7 @@ func main() {
 
 	r := echo.New()
 	middL := _customMiddleware.New()
-	authMiddl := _AuthMiddleware.New()
+	authMiddl := _AuthMiddleware.New(redis.Pool)
 	response := response.New()
 	r.Use(echo.WrapMiddleware(middL.CorsMiddleware.Handler))
 	r.Use(middL.MiddlewareLogging)

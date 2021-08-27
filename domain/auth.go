@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/labstack/echo/v4"
 )
 
 // auth model
@@ -22,7 +23,6 @@ type JwtResults struct {
 }
 
 type JwtCustomClaims struct {
-	ID          int64  `json:"id"`
 	AccessUUID  string `json:"access_uuid"`
 	RefreshUUID string `json:"refresh_uuid"`
 	jwt.StandardClaims
@@ -37,8 +37,7 @@ type AuthUsecase interface {
 	// CreateResetPassword(ctx context.Context, email string) error
 	// VerifyResetPassword(ctx context.Context, token string) error
 	// ResetPassword(ctx context.Context, password, confirm_password, token string) error
-	// GenerateAccessToken(ctx context.Context, user *User) error
-	// GenerateRefreshToken(ctx context.Context, user *User) error
+	GenerateNewAccessToken(ctx echo.Context) (JwtResults, error)
 	// Logout(ctx context.Context, token string) error
 }
 
