@@ -17,7 +17,8 @@ type AuthMiddleware struct {
 
 func (m *AuthMiddleware) Authentication(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		claims, err := auth.TokenValid(c.Request())
+		jwt := auth.ExtractToken(c.Request())
+		claims, err := auth.TokenValid(jwt, auth.AccessToken)
 		if err != nil {
 			makeLogEntry(c).Error(domain.ErrorAuthorization)
 			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Unathorized"})

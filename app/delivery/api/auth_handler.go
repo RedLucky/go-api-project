@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/RedLucky/potongin/app/delivery/api/response"
@@ -22,6 +23,7 @@ func NewAuthHandler(e *echo.Echo, uc domain.AuthUsecase, response *response.Json
 	e.POST("/login", handler.Login)
 	e.POST("/refreshToken", handler.refreshToken)
 	e.POST("/signup", handler.Signup)
+	e.POST("/logout", handler.Logout)
 }
 
 func (handler *AuthHandler) Signup(c echo.Context) (err error) {
@@ -82,6 +84,30 @@ func (handler *AuthHandler) refreshToken(c echo.Context) (err error) {
 	}
 
 	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{"token": token})
+}
+
+func (handler *AuthHandler) Logout(c echo.Context) (err error) {
+	payload := make(map[string]interface{})
+	err = json.NewDecoder(c.Request().Body).Decode(&payload)
+	if err != nil {
+		return err
+	}
+	access_token, ok := payload["access_token"].(string)
+	if !ok {
+		return domain.ErrBadParamInput
+	}
+
+	refresh_token, ok := payload["refresh_token"].(string)
+	if !ok {
+		return domain.ErrBadParamInput
+	}
+
+	err = handler.AuthUsecase.Logout(access_token, refresh_token)
+	if err != nil {
+		return handler.Response.Error(c, domain.ErrorAuthorization)
+	}
+	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{})
+
 }
 
 func validateLogin(m *domain.Auth) (bool, error) {

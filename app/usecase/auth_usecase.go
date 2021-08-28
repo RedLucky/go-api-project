@@ -87,7 +87,8 @@ func (uc *AuthUsecase) GenerateNewAccessToken(c echo.Context) (token domain.JwtR
 	var user domain.User
 
 	// validate token
-	claims, err := auth.RefreshTokenValid(c.Request())
+	jwt := auth.ExtractToken(c.Request())
+	claims, err := auth.TokenValid(jwt, auth.RefreshToken)
 	if err != nil {
 		return domain.JwtResults{}, err
 	}
@@ -111,7 +112,26 @@ func (uc *AuthUsecase) GenerateNewAccessToken(c echo.Context) (token domain.JwtR
 	if err = auth.SaveToken(conn, user, token); err != nil {
 		return domain.JwtResults{}, err
 	}
-	err = auth.DeleteRefreshTokenRedis(conn, res)
+	err = auth.DeleteTokenRedis(conn, res)
+	return
+}
+
+func (uc *AuthUsecase) Logout(accessToken string, refreshToken string) (err error) {
+	access, err := auth.TokenValid(accessToken, auth.AccessToken)
+	if err != nil {
+		return err
+	}
+
+	refresh, err := auth.TokenValid(refreshToken, auth.RefreshToken)
+	if err != nil {
+		return err
+	}
+
+	conn := uc.RedisPool.Get()
+	defer conn.Close()
+	err = auth.DeleteTokenRedis(conn, access["access_uuid"].(string))
+	err = auth.DeleteTokenRedis(conn, refresh["refresh_uuid"].(string))
+
 	return
 }
 

@@ -38,7 +38,7 @@ type AuthUsecase interface {
 	// VerifyResetPassword(ctx context.Context, token string) error
 	// ResetPassword(ctx context.Context, password, confirm_password, token string) error
 	GenerateNewAccessToken(ctx echo.Context) (JwtResults, error)
-	// Logout(ctx context.Context, token string) error
+	Logout(accessToken, refreshToken string) error
 }
 
 // AuthRepository represent the authentication repository contract

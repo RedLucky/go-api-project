@@ -13,6 +13,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	AccessToken  string = "access"
+	RefreshToken string = "refresh"
+)
+
 func CreateToken(user *domain.User) (jwtResults domain.JwtResults, err error) {
 	// access_token
 	jwtResults.AccessUUID = uuid.New().String()
@@ -51,30 +56,18 @@ func CreateToken(user *domain.User) (jwtResults domain.JwtResults, err error) {
 	return
 }
 
-func TokenValid(r *http.Request) (jwt.MapClaims, error) {
-	tokenString := ExtractToken(r)
+func TokenValid(tokenString, tipe string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(viper.GetString(`authentication.jwt_signature_access_key`)), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	}
-	return nil, err
-}
-
-func RefreshTokenValid(r *http.Request) (jwt.MapClaims, error) {
-	tokenString := ExtractToken(r)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		var key string
+		if tipe == AccessToken {
+			key = viper.GetString(`authentication.jwt_signature_access_key`)
+		} else if tipe == RefreshToken {
+			key = viper.GetString(`authentication.jwt_signature_refresh_key`)
 		}
-		return []byte(viper.GetString(`authentication.jwt_signature_refresh_key`)), nil
+		return []byte(key), nil
 	})
 	if err != nil {
 		return nil, err
@@ -118,7 +111,7 @@ func GetTokenFromRedis(redisConn redis.Conn, uuid string) (userId int64, err err
 	return
 }
 
-func DeleteRefreshTokenRedis(redisConn redis.Conn, uuid string) (err error) {
+func DeleteTokenRedis(redisConn redis.Conn, uuid string) (err error) {
 	_, err = redisConn.Do("DEL", uuid)
 	return
 }
