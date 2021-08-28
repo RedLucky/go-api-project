@@ -111,6 +111,7 @@ func (uc *AuthUsecase) GenerateNewAccessToken(c echo.Context) (token domain.JwtR
 	if err = auth.SaveToken(conn, user, token); err != nil {
 		return domain.JwtResults{}, err
 	}
+	err = auth.DeleteRefreshTokenRedis(conn, res)
 	return
 }
 

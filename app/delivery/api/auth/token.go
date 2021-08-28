@@ -117,3 +117,8 @@ func GetTokenFromRedis(redisConn redis.Conn, uuid string) (userId int64, err err
 	userId, err = redis.Int64(redisConn.Do("HGET", uuid, "id"))
 	return
 }
+
+func DeleteRefreshTokenRedis(redisConn redis.Conn, uuid string) (err error) {
+	_, err = redisConn.Do("DEL", uuid)
+	return
+}

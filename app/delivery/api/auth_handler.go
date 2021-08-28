@@ -74,7 +74,7 @@ func (handler *AuthHandler) Login(c echo.Context) (err error) {
 func (handler *AuthHandler) refreshToken(c echo.Context) (err error) {
 	jwtResults, err := handler.AuthUsecase.GenerateNewAccessToken(c)
 	if err != nil {
-		return handler.Response.Error(c, err)
+		return handler.Response.Error(c, domain.ErrorAuthorization)
 	}
 	token := map[string]string{
 		"access_token":  jwtResults.AccessToken,
