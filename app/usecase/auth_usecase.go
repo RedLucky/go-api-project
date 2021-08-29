@@ -8,6 +8,7 @@ import (
 	"github.com/RedLucky/potongin/app/delivery/api/auth"
 	"github.com/RedLucky/potongin/domain"
 	"github.com/gomodule/redigo/redis"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -50,6 +51,11 @@ func (uc *AuthUsecase) SignUp(c context.Context, user *domain.User) (err error) 
 	user.UpdatedAt = time.Now()
 
 	err = uc.AuthRepo.RegisterUser(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	err = uc.CreateVerifyEmail(ctx, user.Email)
 	return
 }
 
@@ -67,6 +73,12 @@ func (uc *AuthUsecase) Authenticate(c context.Context, email, password string) (
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
 		return domain.JwtResults{}, domain.ErrPassword
 	}
+	// check is verified email?
+	ok, err := uc.AuthRepo.IsVerifiedEmail(email)
+	if err != nil && !ok {
+		return domain.JwtResults{}, domain.ErrorEmailNotVerified
+	}
+
 	token, err = auth.CreateToken(&user)
 	if err != nil {
 		return domain.JwtResults{}, domain.ErrInternalServerError
@@ -132,6 +144,42 @@ func (uc *AuthUsecase) Logout(accessToken string, refreshToken string) (err erro
 	err = auth.DeleteTokenRedis(conn, access["access_uuid"].(string))
 	err = auth.DeleteTokenRedis(conn, refresh["refresh_uuid"].(string))
 
+	return
+}
+
+func (uc *AuthUsecase) CreateVerifyEmail(ctx context.Context, email string) (err error) {
+	_, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+	// check email exist or not
+	user, err := uc.AuthRepo.IsExistEmail(email)
+	if err != nil {
+		return err
+	}
+
+	if user == (domain.User{}) {
+		return domain.ErrEmailExist
+	}
+
+	// check is verified email?
+	ok, err := uc.AuthRepo.IsVerifiedEmail(email)
+	if err == nil && ok {
+		return err // email has verified
+	}
+	// delete previous token
+	err = uc.AuthRepo.DeletePreviousVerifyEmail(user.ID)
+	if err != nil {
+		return err
+	}
+	// create verify email
+	var verifyEmail domain.VerifyEmail
+	verifyEmail.Token = uuid.New().String()
+	verifyEmail.User_id = user.ID
+	verifyEmail.Verified = "N"
+	verifyEmail.Created_at = time.Now()
+	err = uc.AuthRepo.CreateVerifyEmail(&verifyEmail)
+	if err != nil {
+		return err
+	}
 	return
 }
 

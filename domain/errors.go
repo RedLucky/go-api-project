@@ -13,15 +13,16 @@ var (
 	ErrBadParamInput = errors.New("given Param is not valid")
 
 	// account
-	ErrAccountExist    = errors.New("account already exist")
-	ErrEmailExist      = errors.New("email already exist")
-	ErrPassword        = errors.New("wrong Password")
-	ErrEmailNotFound   = errors.New("email Not Found")
-	ErrorAuthorization = errors.New("unathorized")
+	ErrAccountExist       = errors.New("account already exist")
+	ErrEmailExist         = errors.New("email already exist")
+	ErrPassword           = errors.New("wrong Password")
+	ErrEmailNotFound      = errors.New("email Not Found")
+	ErrorAuthorization    = errors.New("unathorized")
+	ErrorEmailNotVerified = errors.New("email not verified")
 
 	// generateUrl
 	ErrUrlNotFound       = errors.New("url not found")
 	ErrUrlOriginExist    = errors.New("url origin already exist")
 	ErrUrlGeneratedExist = errors.New("url generated already exist")
-	ErrNameIsExist       = errors.New("Name is exist")
+	ErrNameIsExist       = errors.New("name is exist")
 )

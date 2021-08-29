@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
@@ -28,11 +29,20 @@ type JwtCustomClaims struct {
 	jwt.StandardClaims
 }
 
+type VerifyEmail struct {
+	ID          int64     `json:"id"`
+	Token       string    `json:"token"`
+	User_id     int64     `json:"user_id"`
+	Verified    string    `json:"verified"`
+	Created_at  time.Time `json:"created_at"`
+	Verified_at time.Time `json:"verified_at"`
+}
+
 // AuthUsecase represent the authentication usecases
 type AuthUsecase interface {
 	Authenticate(ctx context.Context, email, password string) (JwtResults, error)
 	SignUp(ctx context.Context, user *User) error
-	// CreateVerifyEmail(ctx context.Context, email string) error
+	CreateVerifyEmail(ctx context.Context, email string) error
 	// VerifyEmail(ctx context.Context, token string) error
 	// CreateResetPassword(ctx context.Context, email string) error
 	// VerifyResetPassword(ctx context.Context, token string) error
@@ -46,7 +56,11 @@ type AuthRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByUsername(ctx context.Context, email string) (User, error)
 	RegisterUser(ctx context.Context, user *User) error
-	// CreateVerifyEmail(ctx context.Context, email string) error
+	IsExistEmail(email string) (result User, err error)
+	IsVerifiedEmail(email string) (result bool, err error)
+	IsExpiredTokenEmail(token string) (result bool, err error)
+	CreateVerifyEmail(verifyEmail *VerifyEmail) error
+	DeletePreviousVerifyEmail(userId int64) error
 	// VerifyEmail(ctx context.Context, token string) error
 	// CreateResetPassword(ctx context.Context, email string) error
 	// VerifyResetPassword(ctx context.Context, token string) error
