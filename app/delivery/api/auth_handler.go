@@ -23,6 +23,8 @@ func NewAuthHandler(e *echo.Echo, uc domain.AuthUsecase, response *response.Json
 	e.POST("/login", handler.Login)
 	e.POST("/refreshToken", handler.refreshToken)
 	e.POST("/signup", handler.Signup)
+	e.POST("/createVerifyEmail", handler.createVerifyEmail)
+	e.POST("/verifyEmail", handler.verifyEmail)
 	e.POST("/logout", handler.Logout)
 }
 
@@ -84,6 +86,37 @@ func (handler *AuthHandler) refreshToken(c echo.Context) (err error) {
 	}
 
 	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{"token": token})
+}
+
+func (handler *AuthHandler) createVerifyEmail(c echo.Context) (err error) {
+	payload := make(map[string]interface{})
+	err = json.NewDecoder(c.Request().Body).Decode(&payload)
+	if err != nil {
+		return err
+	}
+	email, ok := payload["email"].(string)
+	if !ok {
+		return domain.ErrBadParamInput
+	}
+	_, err = handler.AuthUsecase.CreateVerifyEmail(c.Request().Context(), email)
+	return
+}
+
+func (handler *AuthHandler) verifyEmail(c echo.Context) (err error) {
+	payload := make(map[string]interface{})
+	err = json.NewDecoder(c.Request().Body).Decode(&payload)
+	if err != nil {
+		return err
+	}
+	token, ok := payload["token"].(string)
+	if !ok {
+		return domain.ErrBadParamInput
+	}
+	err = handler.AuthUsecase.VerifyEmail(c.Request().Context(), token)
+	if err != nil {
+		return domain.ErrorTokenNotFound
+	}
+	return handler.Response.Success(c, "success", http.StatusOK, map[string]interface{}{})
 }
 
 func (handler *AuthHandler) Logout(c echo.Context) (err error) {

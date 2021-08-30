@@ -19,6 +19,7 @@ var (
 	ErrEmailNotFound      = errors.New("email Not Found")
 	ErrorAuthorization    = errors.New("unathorized")
 	ErrorEmailNotVerified = errors.New("email not verified")
+	ErrorTokenNotFound    = errors.New("token not found")
 
 	// generateUrl
 	ErrUrlNotFound       = errors.New("url not found")

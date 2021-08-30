@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/RedLucky/potongin/domain"
 	"github.com/jinzhu/gorm"
@@ -75,6 +76,35 @@ func (r *AuthRepository) IsVerifiedEmail(email string) (results bool, err error)
 
 func (r *AuthRepository) IsExpiredTokenEmail(token string) (result bool, err error) {
 	return
+}
+
+func (r *AuthRepository) IsExistTokenEmail(token string) (result domain.VerifyEmail, err error) {
+	var verifyEmail domain.VerifyEmail
+	err = r.Mysql.Model(&domain.VerifyEmail{}).Where("token = ? ", token).First(&verifyEmail).Error
+	if err != nil {
+		logrus.Error(err)
+		return verifyEmail, err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		logrus.Error(err)
+		return verifyEmail, err
+	}
+	return verifyEmail, nil
+}
+
+func (r *AuthRepository) VerifyTokenEmail(ctx context.Context, token string) error {
+	err := r.Mysql.Model(&domain.VerifyEmail{}).Where("token = ?", token).Updates(
+		domain.VerifyEmail{Verified: "Y", VerifiedAt: time.Now()}).Error
+
+	return err
+}
+
+func (r *AuthRepository) VerifyTokenAccount(ctx context.Context, userId int64) error {
+	err := r.Mysql.Model(&domain.User{}).Where("id = ?", userId).Updates(
+		domain.User{EmailVerified: "Y"}).Error
+
+	return err
 }
 
 func (r *AuthRepository) DeletePreviousVerifyEmail(userId int64) error {

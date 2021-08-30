@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -55,7 +56,8 @@ func (uc *AuthUsecase) SignUp(c context.Context, user *domain.User) (err error) 
 		return err
 	}
 
-	err = uc.CreateVerifyEmail(ctx, user.Email)
+	encodedString, err := uc.CreateVerifyEmail(ctx, user.Email)
+	fmt.Println(encodedString)
 	return
 }
 
@@ -147,40 +149,67 @@ func (uc *AuthUsecase) Logout(accessToken string, refreshToken string) (err erro
 	return
 }
 
-func (uc *AuthUsecase) CreateVerifyEmail(ctx context.Context, email string) (err error) {
+func (uc *AuthUsecase) CreateVerifyEmail(ctx context.Context, email string) (encodedString string, err error) {
 	_, cancel := context.WithTimeout(ctx, uc.contextTimeout)
 	defer cancel()
 	// check email exist or not
 	user, err := uc.AuthRepo.IsExistEmail(email)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if user == (domain.User{}) {
-		return domain.ErrEmailExist
+		return "", domain.ErrEmailExist
 	}
 
 	// check is verified email?
 	ok, err := uc.AuthRepo.IsVerifiedEmail(email)
 	if err == nil && ok {
-		return err // email has verified
+		return "", err // email has verified
 	}
 	// delete previous token
 	err = uc.AuthRepo.DeletePreviousVerifyEmail(user.ID)
 	if err != nil {
-		return err
+		return "", err
 	}
 	// create verify email
 	var verifyEmail domain.VerifyEmail
 	verifyEmail.Token = uuid.New().String()
-	verifyEmail.User_id = user.ID
+	verifyEmail.UserId = user.ID
 	verifyEmail.Verified = "N"
-	verifyEmail.Created_at = time.Now()
+	verifyEmail.CreatedAt = time.Now()
 	err = uc.AuthRepo.CreateVerifyEmail(&verifyEmail)
+	if err != nil {
+		return "", err
+	}
+	encodedString = base64.StdEncoding.EncodeToString([]byte(verifyEmail.Token))
+	return
+}
+
+func (uc *AuthUsecase) VerifyEmail(ctx context.Context, token string) error {
+	_, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+	var tokenEmail domain.VerifyEmail
+	var decodedByte, _ = base64.StdEncoding.DecodeString(token)
+	var decodeToken = string(decodedByte)
+
+	tokenEmail, err := uc.AuthRepo.IsExistTokenEmail(decodeToken)
 	if err != nil {
 		return err
 	}
-	return
+
+	// soon check the status is verified or not. if verified, u can continue next step.
+
+	err = uc.AuthRepo.VerifyTokenEmail(ctx, decodeToken)
+	if err != nil {
+		return err
+	}
+
+	err = uc.AuthRepo.VerifyTokenAccount(ctx, tokenEmail.UserId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // private function

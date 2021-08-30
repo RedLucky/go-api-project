@@ -94,6 +94,7 @@ func (uc *UserUsecase) Store(c context.Context, m *domain.User) (err error) {
 	}
 
 	m.Password = string(hashedPassword)
+	m.EmailVerified = "N"
 	m.CreatedAt = time.Now()
 	m.UpdatedAt = time.Now()
 

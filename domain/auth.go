@@ -30,20 +30,20 @@ type JwtCustomClaims struct {
 }
 
 type VerifyEmail struct {
-	ID          int64     `json:"id"`
-	Token       string    `json:"token"`
-	User_id     int64     `json:"user_id"`
-	Verified    string    `json:"verified"`
-	Created_at  time.Time `json:"created_at"`
-	Verified_at time.Time `json:"verified_at"`
+	ID         int64     `json:"id"`
+	Token      string    `json:"token"`
+	UserId     int64     `json:"user_id"`
+	Verified   string    `json:"verified"`
+	CreatedAt  time.Time `json:"created_at"`
+	VerifiedAt time.Time `json:"verified_at"`
 }
 
 // AuthUsecase represent the authentication usecases
 type AuthUsecase interface {
 	Authenticate(ctx context.Context, email, password string) (JwtResults, error)
 	SignUp(ctx context.Context, user *User) error
-	CreateVerifyEmail(ctx context.Context, email string) error
-	// VerifyEmail(ctx context.Context, token string) error
+	CreateVerifyEmail(ctx context.Context, email string) (encodedString string, err error)
+	VerifyEmail(ctx context.Context, token string) error
 	// CreateResetPassword(ctx context.Context, email string) error
 	// VerifyResetPassword(ctx context.Context, token string) error
 	// ResetPassword(ctx context.Context, password, confirm_password, token string) error
@@ -59,9 +59,11 @@ type AuthRepository interface {
 	IsExistEmail(email string) (result User, err error)
 	IsVerifiedEmail(email string) (result bool, err error)
 	IsExpiredTokenEmail(token string) (result bool, err error)
+	IsExistTokenEmail(token string) (result VerifyEmail, err error)
 	CreateVerifyEmail(verifyEmail *VerifyEmail) error
 	DeletePreviousVerifyEmail(userId int64) error
-	// VerifyEmail(ctx context.Context, token string) error
+	VerifyTokenEmail(ctx context.Context, token string) error
+	VerifyTokenAccount(ctx context.Context, userId int64) error
 	// CreateResetPassword(ctx context.Context, email string) error
 	// VerifyResetPassword(ctx context.Context, token string) error
 	// ResetPassword(ctx context.Context, password, confirm_password, token string) error
