@@ -22,10 +22,10 @@ func NewUserUsecase(repo domain.UserRepository, timeout time.Duration) domain.Us
 }
 
 func (uc *UserUsecase) Fetch(c context.Context) (res []domain.User, err error) {
-	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
 
-	res, err = uc.UserRepo.Fetch(ctx)
+	res, err = uc.UserRepo.Fetch()
 	if err != nil {
 		return nil, err
 	}
@@ -34,10 +34,10 @@ func (uc *UserUsecase) Fetch(c context.Context) (res []domain.User, err error) {
 }
 
 func (uc *UserUsecase) GetByID(c context.Context, id int64) (res domain.User, err error) {
-	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
 
-	res, err = uc.UserRepo.GetByID(ctx, id)
+	res, err = uc.UserRepo.GetByID(id)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -46,17 +46,17 @@ func (uc *UserUsecase) GetByID(c context.Context, id int64) (res domain.User, er
 }
 
 func (uc *UserUsecase) Update(c context.Context, ar *domain.User) (err error) {
-	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
 
 	ar.UpdatedAt = time.Now()
-	return uc.UserRepo.Update(ctx, ar)
+	return uc.UserRepo.Update(ar)
 }
 
 func (uc *UserUsecase) GetByUsername(c context.Context, username string) (res domain.User, err error) {
-	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
-	res, err = uc.UserRepo.GetByUsername(ctx, username)
+	res, err = uc.UserRepo.GetByUsername(username)
 	if err != nil {
 		return
 	}
@@ -65,9 +65,9 @@ func (uc *UserUsecase) GetByUsername(c context.Context, username string) (res do
 }
 
 func (uc *UserUsecase) GetByEmail(c context.Context, email string) (res domain.User, err error) {
-	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
-	res, err = uc.UserRepo.GetByEmail(ctx, email)
+	res, err = uc.UserRepo.GetByEmail(email)
 	if err != nil {
 		return
 	}
@@ -76,14 +76,14 @@ func (uc *UserUsecase) GetByEmail(c context.Context, email string) (res domain.U
 }
 
 func (uc *UserUsecase) Store(c context.Context, m *domain.User) (err error) {
-	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
-	existEmail, _ := uc.GetByEmail(ctx, m.Email)
+	existEmail, _ := uc.GetByEmail(c, m.Email)
 	if existEmail != (domain.User{}) {
 		return domain.ErrEmailExist
 	}
 
-	existUsername, _ := uc.GetByUsername(ctx, m.Username)
+	existUsername, _ := uc.GetByUsername(c, m.Username)
 	if existUsername != (domain.User{}) {
 		return domain.ErrAccountExist
 	}
@@ -98,21 +98,21 @@ func (uc *UserUsecase) Store(c context.Context, m *domain.User) (err error) {
 	m.CreatedAt = time.Now()
 	m.UpdatedAt = time.Now()
 
-	err = uc.UserRepo.Store(ctx, m)
+	err = uc.UserRepo.Store(m)
 	return
 }
 
 func (uc *UserUsecase) Delete(c context.Context, id int64) (err error) {
-	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
-	existUser, _ := uc.UserRepo.GetByID(ctx, id)
+	existUser, _ := uc.UserRepo.GetByID(id)
 	if err != nil {
 		return
 	}
 	if existUser == (domain.User{}) {
 		return domain.ErrNotFound
 	}
-	return uc.UserRepo.Delete(ctx, id)
+	return uc.UserRepo.Delete(id)
 }
 
 // private function

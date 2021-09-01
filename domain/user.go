@@ -30,11 +30,11 @@ type UserUsecase interface {
 
 // UserRepository represent the User's repository contract
 type UserRepository interface {
-	Fetch(ctx context.Context) (res []User, err error)
-	GetByID(ctx context.Context, id int64) (User, error)
-	GetByUsername(ctx context.Context, username string) (User, error)
-	GetByEmail(ctx context.Context, email string) (User, error)
-	Update(ctx context.Context, ar *User) error
-	Store(ctx context.Context, a *User) error
-	Delete(ctx context.Context, id int64) error
+	Fetch() (res []User, err error)
+	GetByID(id int64) (User, error)
+	GetByUsername(username string) (User, error)
+	GetByEmail(email string) (User, error)
+	Update(ar *User) error
+	Store(a *User) error
+	Delete(id int64) error
 }

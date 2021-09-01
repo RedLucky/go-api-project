@@ -106,7 +106,7 @@ func (handler *AuthHandler) verifyEmail(c echo.Context) (err error) {
 	payload := make(map[string]interface{})
 	err = json.NewDecoder(c.Request().Body).Decode(&payload)
 	if err != nil {
-		return err
+		return domain.ErrBadParamInput
 	}
 	token, ok := payload["token"].(string)
 	if !ok {

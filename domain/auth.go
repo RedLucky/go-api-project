@@ -66,5 +66,5 @@ type AuthRepository interface {
 	VerifyTokenAccount(ctx context.Context, userId int64) error
 	// CreateResetPassword(ctx context.Context, email string) error
 	// VerifyResetPassword(ctx context.Context, token string) error
-	// ResetPassword(ctx context.Context, password, confirm_password, token string) error
+	// ResetPassword(ctx context.Context, password, confirmPassword, token string) error
 }
