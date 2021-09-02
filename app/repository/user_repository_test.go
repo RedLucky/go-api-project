@@ -84,3 +84,28 @@ func TestUserRepository_Store(t *testing.T) {
 	assert.Equal(t, int64(12), user.ID)
 
 }
+
+func TestUserRepository_Update(t *testing.T) {
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+	gdb, _ := gorm.Open("mysql", db)
+	userRepo := repository.NewUserRepository(gdb)
+	queryUpdate := "UPDATE  `users` SET `name` = ?, `updated_at` = ? WHERE (id = ?)"
+	user := &domain.User{
+		ID:        1,
+		Name:      "Lucky Fernanda R",
+		UpdatedAt: time.Now(),
+	}
+	mock.ExpectBegin()
+	mock.ExpectExec(queryUpdate).WithArgs(
+		user.Name, user.UpdatedAt, user.ID).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	err = userRepo.Update(user)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), user.ID)
+
+}

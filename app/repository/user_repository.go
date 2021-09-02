@@ -71,8 +71,8 @@ func (m *UserRepository) Delete(id int64) (err error) {
 
 }
 func (m *UserRepository) Update(ar *domain.User) (err error) {
-	err = m.Mysql.Model(&domain.User{}).Where("id = ?", ar.ID).Updates(
-		domain.User{Name: ar.Name}).Error
+	err = m.Mysql.Model(&domain.User{}).Where("id = ?", ar.ID).UpdateColumn(
+		domain.User{Name: ar.Name, UpdatedAt: ar.UpdatedAt}).Error
 
 	return
 }
