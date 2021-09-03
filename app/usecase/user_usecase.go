@@ -105,9 +105,9 @@ func (uc *UserUsecase) Store(c context.Context, m *domain.User) (err error) {
 func (uc *UserUsecase) Delete(c context.Context, id int64) (err error) {
 	_, cancel := context.WithTimeout(c, uc.contextTimeout)
 	defer cancel()
-	existUser, _ := uc.UserRepo.GetByID(id)
+	existUser, err := uc.UserRepo.GetByID(id)
 	if err != nil {
-		return
+		return domain.ErrNotFound
 	}
 	if existUser == (domain.User{}) {
 		return domain.ErrNotFound
